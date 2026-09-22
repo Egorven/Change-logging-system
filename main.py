@@ -1,17 +1,16 @@
 """Точка запуска системы ведения журнала изменений."""
 
 from pathlib import Path
-from typing import Any
 
-from changes import (
+from models import Change, Developer, Project, Version
+from changes_ops import (
     add_change,
     filter_by_type,
-    format_entry,
     get_statistics,
     sort_changes,
 )
-from developer import add_developer
-from project import add_project, delete_project
+from developer_ops import add_developer
+from project_ops import add_project, delete_project
 from storage import (
     load_changes,
     load_developers,
@@ -24,8 +23,7 @@ from storage import (
     to_json,
 )
 from utils import input_date, input_int, input_text
-from version import add_version, sort_versions
-
+from version_ops import add_version, sort_versions
 
 DATA_DIR = Path(__file__).parent / "data"
 PROJECTS_FILE = DATA_DIR / "project.json"
@@ -35,50 +33,47 @@ DEVELOPERS_FILE = DATA_DIR / "developer.json"
 CHANGE_TYPES = {1: "added", 2: "fixed", 3: "removed"}
 
 
-def show_projects(projects: list[dict[str, Any]]) -> None:
+def show_projects(projects: list[Project]) -> None:
     """Вывести список проектов."""
     if not projects:
         print("Проекты отсутствуют.")
         return
-    for item in projects:
-        print(f"{item['id']}. {item['name']} — {item.get('description', '')}")
+    for project in projects:
+        print(project)
 
 
-def show_versions(versions: list[dict[str, Any]]) -> None:
+def show_versions(versions: list[Version]) -> None:
     """Вывести список версий."""
     if not versions:
         print("Версии отсутствуют.")
         return
-    for number, item in enumerate(sort_versions(versions), start=1):
-        print(
-            f"{number}. {item['name']} "
-            f"(дата: {item['release_date']})"
-        )
+    for number, version in enumerate(sort_versions(versions), start=1):
+        print(f"{number}. {version}")
 
 
-def show_changes(changes: list[dict[str, Any]]) -> None:
+def show_changes(changes: list[Change]) -> None:
     """Вывести журнал изменений."""
     if not changes:
         print("Изменения отсутствуют.")
         return
-    for item in sort_changes(changes):
-        print(f"{item['id']}. {item['date']} {format_entry(item)}")
+    for change in sort_changes(changes):
+        print(change)
 
 
-def show_developers(developers: list[dict[str, Any]]) -> None:
+def show_developers(developers: list[Developer]) -> None:
     """Вывести список разработчиков."""
     if not developers:
         print("Разработчики отсутствуют.")
         return
-    for number, item in enumerate(developers, start=1):
-        print(f"{number}. {item['name']} — {item.get('role', '')}")
+    for number, developer in enumerate(developers, start=1):
+        print(f"{number}. {developer}")
 
 
 def save_all(
-    projects: list[dict[str, Any]],
-    versions: list[dict[str, Any]],
-    changes: list[dict[str, Any]],
-    developers: list[dict[str, Any]],
+    projects: list[Project],
+    versions: list[Version],
+    changes: list[Change],
+    developers: list[Developer],
 ) -> None:
     """Сохранить все коллекции приложения."""
     save_projects(PROJECTS_FILE, projects)
@@ -87,10 +82,23 @@ def save_all(
     save_developers(DEVELOPERS_FILE, developers)
 
 
+def find_project_by_id(
+        projects: list[Project],
+        project_id: int) -> Project | None:
+    """Найти проект по идентификатору."""
+    return next((p for p in projects if p.id == project_id), None)
+
+
+def find_developer_by_id(
+    developers: list[Developer], developer_id: int
+) -> Developer | None:
+    """Найти разработчика по идентификатору."""
+    return next((d for d in developers if d.id == developer_id), None)
+
+
 def print_menu() -> None:
     """Вывести главное меню приложения."""
-    print(
-        """
+    print("""
 === Система ведения журнала изменений ===
 1. Показать проекты
 2. Добавить проект
@@ -105,17 +113,16 @@ def print_menu() -> None:
 11. Добавить разработчика
 12. Показать список разработчиков
 0. Выход
-"""
-    )
+""")
 
 
 def main() -> None:
     """Загрузить данные и запустить цикл меню."""
     try:
         projects = load_projects(PROJECTS_FILE)
-        versions = load_versions(VERSIONS_FILE)
-        changes = load_changes(CHANGES_FILE)
         developers = load_developers(DEVELOPERS_FILE)
+        versions = load_versions(VERSIONS_FILE, projects)
+        changes = load_changes(CHANGES_FILE, projects, versions, developers)
     except ValueError as error:
         print(f"Ошибка загрузки данных: {error}")
         return
@@ -137,85 +144,75 @@ def main() -> None:
             save_projects(PROJECTS_FILE, projects)
         elif choice == 3:
             project_id = input_int("ID проекта: ")
-            project_versions = [
-                item for item in versions
-                if item["project_id"] == project_id
-            ]
-            version_ids = {item["id"] for item in project_versions}
+            project = find_project_by_id(projects, project_id)
+            if project is None:
+                print("Проект не найден.")
+                continue
+            version_ids = {v.id for v in versions if v.project is project}
             project_deleted = delete_project(projects, project_id)
             if project_deleted:
                 versions[:] = [
-                    item for item in versions
-                    if item["id"] not in version_ids
+                    v for v in versions
+                    if v.id not in version_ids
                 ]
                 changes[:] = [
-                    item for item in changes
-                    if item.get("project_id") != project_id
-                    and item.get("version_id") not in version_ids
+                    c for c in changes
+                    if c.project is not project
                 ]
                 save_all(projects, versions, changes, developers)
                 print("Проект, его версии и изменения удалены.")
-            else:
-                print("Проект не найден.")
         elif choice == 4:
             project_id = input_int("ID проекта: ")
-            if not any(item["id"] == project_id for item in projects):
+            project = find_project_by_id(projects, project_id)
+            if project is None:
                 print("Проект не найден.")
                 continue
-            project_versions = [
-                item for item in versions
-                if item["project_id"] == project_id
-            ]
+            project_versions = [v for v in versions if v.project is project]
             show_versions(project_versions)
         elif choice == 5:
             project_id = input_int("ID проекта: ")
-            if not any(item["id"] == project_id for item in projects):
+            project = find_project_by_id(projects, project_id)
+            if project is None:
                 print("Проект не найден.")
                 continue
             version_name = input_text("Название версии: ")
             release_date = input_date("Дата выпуска (ДД.ММ.ГГГГ): ")
             add_version(
-                versions, project_id, version_name, release_date.isoformat()
-            )
+                versions,
+                project,
+                version_name,
+                release_date.isoformat()
+                )
             save_versions(VERSIONS_FILE, versions)
         elif choice == 6:
             project_id = input_int("ID проекта: ")
-            if not any(item["id"] == project_id for item in projects):
+            project = find_project_by_id(projects, project_id)
+            if project is None:
                 print("Проект не найден.")
                 continue
-            project_changes = [
-                item for item in changes
-                if item.get("project_id") == project_id
-            ]
+            project_changes = [c for c in changes if c.project is project]
             show_changes(project_changes)
         elif choice == 7:
             project_id = input_int("ID проекта: ")
-            if not any(item["id"] == project_id for item in projects):
+            project = find_project_by_id(projects, project_id)
+            if project is None:
                 print("Проект не найден.")
                 continue
-            print(
-                "Тип изменения: 1 - добавлено, "
-                "2 - исправлено, 3 - удалено"
-            )
+            print("Тип изменения: 1 - добавлено, 2 - исправлено, 3 - удалено")
             type_number = input_int("Выберите тип изменения: ")
             target_type = CHANGE_TYPES.get(type_number)
             if target_type is None:
                 print("Неизвестный тип изменения.")
                 continue
-            project_changes = [
-                item for item in changes
-                if item.get("project_id") == project_id
-            ]
+            project_changes = [c for c in changes if c.project is project]
             show_changes(filter_by_type(project_changes, target_type))
         elif choice == 8:
             project_id = input_int("ID проекта: ")
-            if not any(item["id"] == project_id for item in projects):
+            project = find_project_by_id(projects, project_id)
+            if project is None:
                 print("Проект не найден.")
                 continue
-            print(
-                "Тип изменения: 1 - добавлено, "
-                "2 - исправлено, 3 - удалено"
-            )
+            print("Тип изменения: 1 - добавлено, 2 - исправлено, 3 - удалено")
             type_number = input_int("Выберите тип изменения: ")
             change_type = CHANGE_TYPES.get(type_number)
             if change_type is None:
@@ -223,13 +220,7 @@ def main() -> None:
                 continue
             description = input_text("Описание: ")
             developer_id = input_int("ID разработчика: ")
-            developer = next(
-                (
-                    item for item in developers
-                    if item["id"] == developer_id
-                ),
-                None,
-            )
+            developer = find_developer_by_id(developers, developer_id)
             if developer is None:
                 print("Разработчик не найден.")
                 continue
@@ -238,46 +229,29 @@ def main() -> None:
                 changes,
                 change_type,
                 description,
-                developer["name"],
+                developer.name,
                 change_date.isoformat(),
-                project_id=project_id,
-                developer_id=developer_id,
+                project=project,
+                developer=developer,
             )
             save_changes(CHANGES_FILE, changes)
         elif choice == 9:
             project_id = input_int("ID проекта: ")
-            if not any(item["id"] == project_id for item in projects):
-                print("Проект не найден.")
-                continue
-            project_changes = [
-                item for item in changes
-                if item.get("project_id") == project_id
-            ]
-            print(get_statistics(project_changes))
-        elif choice == 10:
-            project_id = input_int("ID проекта: ")
-            project = next(
-                (item for item in projects if item["id"] == project_id),
-                None,
-            )
+            project = find_project_by_id(projects, project_id)
             if project is None:
                 print("Проект не найден.")
                 continue
-            project_versions = [
-                item for item in versions
-                if item["project_id"] == project_id
-            ]
-            project_changes = [
-                item for item in changes
-                if item.get("project_id") == project_id
-            ]
-            print(
-                to_json(
-                    project,
-                    project_versions,
-                    project_changes,
-                )
-            )
+            project_changes = [c for c in changes if c.project is project]
+            print(get_statistics(project_changes))
+        elif choice == 10:
+            project_id = input_int("ID проекта: ")
+            project = find_project_by_id(projects, project_id)
+            if project is None:
+                print("Проект не найден.")
+                continue
+            project_versions = [v for v in versions if v.project is project]
+            project_changes = [c for c in changes if c.project is project]
+            print(to_json(project, project_versions, project_changes))
         elif choice == 11:
             name = input_text("Имя разработчика: ")
             role = input_text("Роль: ")
