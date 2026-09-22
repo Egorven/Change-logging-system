@@ -2,7 +2,6 @@
 
 from typing import Any
 
-
 def add_developer(developers: list[dict[str, Any]], name: str,
                   role: str = "") -> dict[str, Any]:
     """Добавить разработчика и вернуть созданную запись."""
