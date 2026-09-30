@@ -1,7 +1,7 @@
 """Тесты для модуля change_ops и класса Change."""
 
-from models import Change
-from changes_ops import (
+from models import (
+    Change,
     add_change,
     filter_by_type,
     get_statistics,

@@ -1,7 +1,6 @@
 """Тесты для модуля project_ops и класса Project."""
 
-from models import Change, Project, Version
-from project_ops import add_project, delete_project
+from models import Change, Project, Version, add_project, delete_project
 
 
 def test_add_project() -> None:

@@ -2,15 +2,13 @@
 
 from pathlib import Path
 
-from models import Change, Developer, Project, Version
-from changes_ops import (
-    add_change,
-    filter_by_type,
-    get_statistics,
-    sort_changes,
+from models import (
+    add_project, delete_project,
+    add_developer,
+    add_version, sort_versions,
+    add_change, filter_by_type, sort_changes, get_statistics,
+    Project, Developer, Version, Change,
 )
-from developer_ops import add_developer
-from project_ops import add_project, delete_project
 from storage import (
     load_changes,
     load_developers,
@@ -23,7 +21,6 @@ from storage import (
     to_json,
 )
 from utils import input_date, input_int, input_text
-from version_ops import add_version, sort_versions
 
 DATA_DIR = Path(__file__).parent / "data"
 PROJECTS_FILE = DATA_DIR / "project.json"

@@ -1,7 +1,6 @@
 """Тесты для модуля version_ops и класса Version."""
 
-from models import Project, Version
-from version_ops import add_version, sort_versions
+from models import Project, Version, add_version, sort_versions
 
 
 def test_add_version() -> None:

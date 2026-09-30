@@ -1,7 +1,6 @@
 """Тесты для модуля developer_ops и класса Developer."""
 
-from models import Developer
-from developer_ops import add_developer, find_developer
+from models import Developer, add_developer, find_developer
 
 
 def test_add_developer() -> None:
