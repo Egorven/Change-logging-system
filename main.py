@@ -3,11 +3,19 @@
 from pathlib import Path
 
 from models import (
-    add_project, delete_project,
+    add_project,
+    delete_project,
     add_developer,
-    add_version, sort_versions,
-    add_change, filter_by_type, sort_changes, get_statistics,
-    Project, Developer, Version, Change,
+    add_version,
+    sort_versions,
+    add_change,
+    filter_by_type,
+    sort_changes,
+    get_statistics,
+    Project,
+    Developer,
+    Version,
+    Change,
 )
 from storage import (
     load_changes,
@@ -79,9 +87,9 @@ def save_all(
     save_developers(DEVELOPERS_FILE, developers)
 
 
-def find_project_by_id(
-        projects: list[Project],
-        project_id: int) -> Project | None:
+def find_project_by_id(projects:
+                       list[Project],
+                       project_id: int) -> Project | None:
     """Найти проект по идентификатору."""
     return next((p for p in projects if p.id == project_id), None)
 
@@ -148,14 +156,8 @@ def main() -> None:
             version_ids = {v.id for v in versions if v.project is project}
             project_deleted = delete_project(projects, project_id)
             if project_deleted:
-                versions[:] = [
-                    v for v in versions
-                    if v.id not in version_ids
-                ]
-                changes[:] = [
-                    c for c in changes
-                    if c.project is not project
-                ]
+                versions[:] = [v for v in versions if v.id not in version_ids]
+                changes[:] = [c for c in changes if c.project is not project]
                 save_all(projects, versions, changes, developers)
                 print("Проект, его версии и изменения удалены.")
         elif choice == 4:
@@ -178,8 +180,7 @@ def main() -> None:
                 versions,
                 project,
                 version_name,
-                release_date.isoformat()
-                )
+                release_date.isoformat())
             save_versions(VERSIONS_FILE, versions)
         elif choice == 6:
             project_id = input_int("ID проекта: ")

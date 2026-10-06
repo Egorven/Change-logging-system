@@ -41,10 +41,9 @@ def load_projects(filename: str | Path) -> list[Project]:
 
 def save_projects(filename: str | Path, projects: list[Project]) -> None:
     data = [
-        {
-            "id": p.id,
-            "name": p.name,
-            "description": p.description} for p in projects
+        {"id": p.id,
+         "name": p.name,
+         "description": p.description} for p in projects
     ]
     _save_raw(filename, data)
 
@@ -62,19 +61,17 @@ def save_developers(filename: str | Path, developers: list[Developer]) -> None:
 
 
 # === Versions ===
-def load_versions(
-        filename: str | Path,
-        projects: list[Project]) -> list[Version]:
+def load_versions(filename: str | Path,
+                  projects: list[Project]) -> list[Version]:
     """Загрузить версии из JSON-файла, связывая с проектами."""
     project_map = {p.id: p for p in projects}
     versions = []
     for v in _load_raw(filename):
         project = project_map.get(v.get("project_id"))
-        versions.append(Version(
-            v["id"],
-            v["name"],
-            v["release_date"],
-            project))
+        versions.append(Version(v["id"],
+                                v["name"],
+                                v["release_date"],
+                                project))
     return versions
 
 

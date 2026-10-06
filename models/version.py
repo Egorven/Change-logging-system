@@ -1,4 +1,5 @@
 """Модуль Version — версия проекта и операции с ней."""
+
 from typing import Optional
 from .project import Project
 
@@ -18,6 +19,7 @@ class Version:
         self.name = name
         self.release_date = release_date
         self.project = project
+
 
     def __str__(self) -> str:
         """Строковое представление версии."""

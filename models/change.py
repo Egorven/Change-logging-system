@@ -1,4 +1,5 @@
 """Модуль Change — запись журнала изменений и операции с ней."""
+
 from collections import Counter
 from typing import Optional
 from .developer import Developer

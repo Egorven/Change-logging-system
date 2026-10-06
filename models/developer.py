@@ -1,4 +1,5 @@
 """Модуль Developer — разработчик и операции с ним."""
+
 from typing import Any
 
 
@@ -50,7 +51,7 @@ def find_developer(
     """Найти разработчиков по имени или роли."""
     query = query.casefold()
     return [
-        dev for dev in developers
-        if query in dev.name.casefold()
-        or query in dev.role.casefold()
+        dev
+        for dev in developers
+        if query in dev.name.casefold() or query in dev.role.casefold()
     ]
