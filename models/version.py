@@ -20,7 +20,6 @@ class Version:
         self.release_date = release_date
         self.project = project
 
-
     def __str__(self) -> str:
         """Строковое представление версии."""
         project_name = self.project.name if self.project else "—"

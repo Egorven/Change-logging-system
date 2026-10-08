@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал изменений — ChangeLog{% endblock %}
+
+{% block content %}
+  <h1>
+    Журнал изменений
+    <span class="text-muted fs-5">({{ changes|length }})</span>
+  </h1>
+
+  {% if changes %}
+    <ul class="list-group">
+      {% for change in changes %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <a href="{% url 'changes:change_detail' change.id %}">
+            {{ change.description|truncatechars:100 }}
+          </a>
+          {% if change.type == 'added' %}
+            <span class="badge bg-success">Добавлено</span>
+          {% elif change.type == 'fixed' %}
+            <span class="badge bg-warning text-dark">Исправлено</span>
+          {% elif change.type == 'removed' %}
+            <span class="badge bg-danger">Удалено</span>
+          {% else %}
+            <span class="badge bg-secondary">Изменено</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-info mt-3">Изменений пока нет.</div>
+  {% endif %}
+{% endblock %}

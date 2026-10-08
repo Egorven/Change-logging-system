@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="96" viewBox="0 0 320 96" role="img" aria-labelledby="title desc">
+  <title id="title">ChangeLog</title>
+  <desc id="desc">Логотип системы ведения журнала изменений</desc>
+  <rect width="320" height="96" rx="16" fill="#0d6efd"/>
+  <rect x="20" y="18" width="60" height="60" rx="10" fill="#ffffff"/>
+  <path d="M36 34h28v7H36zm0 12h28v7H36zm0 12h18v7H36z" fill="#0d6efd"/>
+  <path d="M62 57l8 8-8 8-5-5 3-3-3-3z" fill="#20c997"/>
+  <text x="98" y="59" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#ffffff">ChangeLog</text>
+</svg>

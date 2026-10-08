@@ -4,7 +4,8 @@
 
 Change-logging-system – приложение для учёта проектов, версий, разработчиков и изменений в программных продуктах.
 
-Консольная версия приложения (ПР3) дополнена веб-интерфейсом на Django (ПР5).
+Консольная версия приложения (ПР3) дополнена веб-интерфейсом на Django (ПР5),
+а в ПР6 веб-интерфейс переведён на систему шаблонов Django.
 
 Приложение позволяет:
 
@@ -23,7 +24,9 @@ Change-logging-system – приложение для учёта проекто�
 * Python 3;
 * Django 5.2 – веб-фреймворк;
 * HTML – разметка веб-страниц;
+* Django Templates: наследование, блоки и включаемые шаблоны;
 * CSS и Bootstrap 5.3 – оформление страниц;
+* SVG-изображение и JavaScript;
 * pytest – автоматизированные тесты;
 * flake8 – проверка качества кода.
 
@@ -158,9 +161,95 @@ version.project.name     # название проекта версии
 
 Если проект или изменение с указанным идентификатором не найдено, соответствующая страница возвращает код статуса 404.
 
+## Реализация ПР6: шаблоны Django
+
+В ПР6 HTML-код был вынесен из Python-представлений в Django-шаблоны.
+Представления загружают данные, формируют контекст и вызывают `render()`.
+Функция `page()` больше не используется веб-представлениями.
+
+### Базовый шаблон и наследование
+
+Общий каркас сайта находится в [templates/base.html](templates/base.html).
+Он содержит:
+
+* подключение Bootstrap;
+* подключение собственного CSS и JavaScript через `{% static %}`;
+* общий блок навигации;
+* блоки `{% block title %}` и `{% block content %}`.
+
+Страницы приложений наследуют базовый шаблон через `{% extends "base.html" %}`.
+
+### Включаемые шаблоны и навигация
+
+Общая навигация вынесена в
+[templates/includes/navigation.html](templates/includes/navigation.html)
+и подключается в `base.html` через `{% include %}`.
+
+Ссылки формируются через именованные URL с пространствами имён:
+
+```django
+{% url 'homepage:index' %}
+{% url 'projects:project_detail' project.id %}
+{% url 'changes:change_detail' change.id %}
+```
+
+### Шаблоны приложений
+
+```text
+templates/
+├── base.html
+├── 404.html
+└── includes/
+    └── navigation.html
+
+homepage/templates/homepage/
+└── index.html
+
+projects/templates/projects/
+├── project_list.html
+└── project_detail.html
+
+changes/templates/changes/
+├── change_list.html
+└── change_detail.html
+```
+
+В шаблонах используются:
+
+* контекст, передаваемый из view-функций;
+* циклы `{% for %}`;
+* условия `{% if %}` и `{% elif %}`;
+* обработка пустых списков;
+* фильтры `|length` и `|truncatechars`.
+
+### Статические файлы
+
+Собственные статические файлы находятся в
+[homepage/static/homepage/](homepage/static/homepage/):
+
+* `css/style.css` — оформление сайта и прижатие footer к нижней части страницы;
+* `img/logo.svg` — логотип ChangeLog;
+* `js/main.js` — JavaScript для навигации.
+
+Они подключаются в `base.html` с помощью `{% load static %}` и `{% static %}`.
+
+### Предметная область
+
+Вместо учебных сущностей Roomly используются сущности индивидуального проекта:
+
+* `Project` — проект;
+* `Version` — версия проекта;
+* `Developer` — разработчик;
+* `Change` — запись журнала изменений.
+
+Аналогом списка помещений является список проектов, а аналогом страниц
+бронирований — список изменений и страница отдельного изменения. Источник
+данных сохранён: JSON-файлы загружаются через `storage.py` и преобразуются
+в объекты предметной области. ORM в ПР6 не внедрялся.
+
 ## Основные операции
 
-### Используется в веб-интерфейсе (ПР5)
+### Используется в веб-интерфейсе (ПР6)
 
 * просмотр списка проектов;
 * просмотр информации о проекте и его версиях;
@@ -222,6 +311,12 @@ Change-logging-system/
 │   ├── apps.py
 │   ├── migrations/
 │   ├── models.py
+│   ├── static/homepage/
+│   │   ├── css/style.css
+│   │   ├── img/logo.svg
+│   │   └── js/main.js
+│   ├── templates/homepage/
+│   │   └── index.html
 │   ├── tests.py
 │   ├── urls.py
 │   └── views.py
@@ -232,6 +327,9 @@ Change-logging-system/
 │   ├── apps.py
 │   ├── migrations/
 │   ├── models.py
+│   ├── templates/projects/
+│   │   ├── project_list.html
+│   │   └── project_detail.html
 │   ├── tests.py
 │   ├── urls.py
 │   └── views.py
@@ -242,6 +340,9 @@ Change-logging-system/
 │   ├── apps.py
 │   ├── migrations/
 │   ├── models.py
+│   ├── templates/changes/
+│   │   ├── change_list.html
+│   │   └── change_detail.html
 │   ├── tests.py
 │   ├── urls.py
 │   └── views.py
@@ -258,6 +359,11 @@ Change-logging-system/
 │   ├── version.json
 │   ├── changes.json
 │   └── developer.json
+│
+├── templates/
+│   ├── base.html
+│   ├── 404.html
+│   └── includes/navigation.html
 │
 └── tests/
     ├── test_project.py
@@ -283,22 +389,31 @@ Change-logging-system/
 
 ### `homepage/`
 Django-приложение, отвечающее за главную страницу:
-* `views.py` – функция `page()` (общий HTML-каркас), view-функции `index()` и `page_not_found()`;
+* `views.py` – view-функции `index()` и `page_not_found()`;
+* `templates/homepage/index.html` – шаблон главной страницы;
 * `urls.py` – маршрут главной страницы.
-
-Функция `page()` размещена здесь, потому что главная страница задаёт общий вид всех остальных страниц – она точка входа в проект. Остальные приложения импортируют её.
 
 ### `projects/`
 Django-приложение, отвечающее за проекты и версии:
 * `views.py` – view-функции `projects()` и `project_detail()`;
+* `templates/projects/` – шаблоны списка и страницы проекта;
 * `urls.py` – маршруты приложения;
-* `models.py` – Django-модели (заполняется в следующих работах).
+* `models.py` – заготовка приложения; предметные объекты загружаются из JSON.
 
 ### `changes/`
 Django-приложение, отвечающее за изменения:
 * `views.py` – view-функции `changes()` и `change_detail()`;
+* `templates/changes/` – шаблоны списка и страницы изменения;
 * `urls.py` – маршруты приложения;
-* `models.py` – Django-модели (заполняется в следующих работах).
+* `models.py` – заготовка приложения; предметные объекты загружаются из JSON.
+
+### `templates/`
+
+Общие шаблоны проекта:
+
+* `base.html` — базовый шаблон с блоками `title` и `content`;
+* `404.html` — собственная страница ошибки;
+* `includes/navigation.html` — повторно используемая навигация.
 
 ### `models/`
 Классы предметной области и функции работы с ними (пакет ПР3):
@@ -324,9 +439,10 @@ Django-приложение, отвечающее за изменения:
 
 ## Запуск приложения
 
+
 Веб-версия (Django):
 ```text
-python manage.py runserver
+ manage.py runserver
 ```
 После запуска открыть в браузере адрес:
 ```text
@@ -345,6 +461,7 @@ python main.py
 pytest -v
 ```
 
+
 ## Проверка качества кода
 
 Для проверки соответствия кода требованиям PEP 8 используется `flake8`.
@@ -353,3 +470,24 @@ pytest -v
 ```text
 flake8 .
 ```
+
+## Проверка результата ПР6
+
+В рамках ПР6 выполнены следующие требования:
+
+- создан общий каталог `templates` и настроен `TEMPLATES[0]["DIRS"]` в
+  `changelog/settings.py`;
+- создан базовый шаблон `base.html`;
+- страницы приложений используют `{% extends %}` и `{% block %}`;
+- общая навигация вынесена в `{% include %}`;
+- данные передаются из view-функций в шаблоны через контекст;
+- используются `{% for %}`, `{% if %}` и обработка пустых списков;
+- настроены `app_name`, именованные URL и пространства имён;
+- ссылки строятся через тег `{% url %}`;
+- применяются фильтры `length` и `truncatechars`;
+- подключены собственные CSS, SVG-изображение и JavaScript через
+  `{% static %}`;
+- HTML больше не формируется в Python через функцию `page()`;
+- сохранено JSON-хранилище ПР5;
+- ORM в рамках ПР6 не внедрялся;
+- существующие тесты проекта сохраняют работоспособность.

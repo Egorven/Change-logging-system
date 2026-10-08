@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if change %}Изменение №{{ change.id }} — ChangeLog{% else %}Изменение не найдено — ChangeLog{% endif %}
+{% endblock %}
+
+{% block content %}
+  {% if change %}
+    <div class="card">
+      <div class="card-body">
+        <h1 class="card-title">{{ change.description|truncatechars:160 }}</h1>
+
+        <p><strong>Тип:</strong>
+          {% if change.type == 'added' %}
+            <span class="badge bg-success">Добавлено</span>
+          {% elif change.type == 'fixed' %}
+            <span class="badge bg-warning text-dark">Исправлено</span>
+          {% elif change.type == 'removed' %}
+            <span class="badge bg-danger">Удалено</span>
+          {% else %}
+            <span class="badge bg-secondary">Изменено</span>
+          {% endif %}
+        </p>
+
+        <p><strong>Дата:</strong> {{ change.date }}</p>
+        <p><strong>Автор:</strong> {{ author }}</p>
+        <p><strong>Проект:</strong> {{ project_name }}</p>
+        <p><strong>Версия:</strong> {{ version_name }}</p>
+
+        <a href="{% url 'changes:changes' %}" class="btn btn-outline-secondary">← к списку изменений</a>
+      </div>
+    </div>
+  {% else %}
+    <h1 class="text-danger">Изменение не найдено</h1>
+    <a href="{% url 'changes:changes' %}" class="btn btn-outline-secondary">← к списку изменений</a>
+  {% endif %}
+{% endblock %}

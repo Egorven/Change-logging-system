@@ -1,10 +1,12 @@
 """View-функции приложения changes."""
 
-from django.http import HttpResponse
+from django.shortcuts import render
 
-from homepage.views import page
 from storage import (
-    load_changes, load_developers, load_projects, load_versions,
+    load_changes,
+    load_developers,
+    load_projects,
+    load_versions,
 )
 
 BADGES = {
@@ -32,62 +34,36 @@ def _load_all():
 def changes(request):
     """Список всех изменений."""
     changes_list = _load_all()
-
-    items = ""
-    for change in changes_list:
-        badge = BADGES.get(change.type, "bg-secondary")
-        label = LABELS.get(change.type, "Изменено")
-        items += (
-            f'<li class="list-group-item d-flex '
-            f'justify-content-between align-items-center">'
-            f'<a href="/changes/{change.id}/">{change.description}</a>'
-            f'<span class="badge {badge}">{label}</span>'
-            f"</li>"
-        )
-    if not items:
-        items = '<li class="list-group-item">Изменений пока нет</li>'
-
-    content = f"""
-    <h1>Журнал изменений</h1>
-    <ul class="list-group">{items}</ul>
-    """
-    return HttpResponse(page("ChangeLog — изменения", content))
+    context = {
+        "changes": changes_list,
+        "badges": BADGES,
+        "labels": LABELS,
+    }
+    return render(request, "changes/change_list.html", context)
 
 
 def change_detail(request, change_id):
     """Страница одного изменения."""
     changes_list = _load_all()
-    change = next((c for c in changes_list if c.id == change_id), None)
-
-    if change is None:
-        content = """
-        <h1 class="text-danger">Изменение не найдено</h1>
-        <a href="/changes/" class="btn btn-outline-secondary">
-            ← к списку изменений
-        </a>
-        """
-        return HttpResponse(
-            page("Изменение не найдено", content), status=404,
+    change = next((
+        item for item in changes_list if item.id == change_id), None
         )
 
-    badge = BADGES.get(change.type, "bg-secondary")
-    label = LABELS.get(change.type, "Изменено")
-    project_name = change.project.name if change.project else "—"
-    version_name = change.version.name if change.version else "—"
-    author = change.developer.name if change.developer else change.author
+    if change is None:
+        return render(
+            request,
+            "changes/change_detail.html",
+            {"change": None},
+            status=404,
+        )
 
-    content = f"""
-    <div class="card"><div class="card-body">
-      <h5 class="card-title">{change.description}</h5>
-      <p><strong>Тип:</strong>
-         <span class="badge {badge}">{label}</span></p>
-      <p><strong>Дата:</strong> {change.date}</p>
-      <p><strong>Автор:</strong> {author}</p>
-      <p><strong>Проект:</strong> {project_name}</p>
-      <p><strong>Версия:</strong> {version_name}</p>
-      <a href="/changes/" class="btn btn-outline-secondary">
-          ← к списку изменений
-      </a>
-    </div></div>
-    """
-    return HttpResponse(page(f"Изменение №{change.id}", content))
+    author = change.developer.name if change.developer else change.author
+    context = {
+        "change": change,
+        "author": author,
+        "project_name": change.project.name if change.project else "—",
+        "version_name": change.version.name if change.version else "—",
+        "badge": BADGES.get(change.type, "bg-secondary"),
+        "label": LABELS.get(change.type, "Изменено"),
+    }
+    return render(request, "changes/change_detail.html", context)

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}ChangeLog Tracker{% endblock %}
+
+{% block content %}
+  <div class="text-center">
+    <h1 class="display-4">ChangeLog Tracker</h1>
+    <p class="lead">Система ведения журнала изменений.</p>
+    <div class="d-flex justify-content-center gap-2 mt-4">
+      <a href="{% url 'projects:projects' %}" class="btn btn-primary">Проекты</a>
+      <a href="{% url 'changes:changes' %}" class="btn btn-secondary">Изменения</a>
+    </div>
+  </div>
+{% endblock %}

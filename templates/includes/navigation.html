@@ -1,0 +1,26 @@
+{% load static %}
+<header>
+  <nav class="navbar navbar-light" style="background-color: #dff0ff;">
+    <div class="container">
+      <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'homepage:index' %}">
+        <img
+          src="{% static 'homepage/img/logo.svg' %}"
+          alt=""
+          height="32"
+          width="107"
+        >
+      </a>
+      <ul class="nav nav-pills">
+        <li class="nav-item">
+          <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'homepage:index' %}">Главная</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if '/projects/' in request.path %}active{% endif %}" href="{% url 'projects:projects' %}">Проекты</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if '/changes/' in request.path %}active{% endif %}" href="{% url 'changes:changes' %}">Изменения</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>
