@@ -8,6 +8,60 @@
     <span class="text-muted fs-5">({{ changes|length }})</span>
   </h1>
 
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <label class="form-label" for="search">Поиск</label>
+      <input class="form-control" id="search" name="q" value="{{ search_text }}"
+             placeholder="Описание или автор">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="date-from">Дата от</label>
+      <input class="form-control" id="date-from" name="date_from"
+             type="date" value="{{ date_from }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="date-to">Дата до</label>
+      <input class="form-control" id="date-to" name="date_to"
+             type="date" value="{{ date_to }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label" for="project">Проект</label>
+      <select class="form-select" id="project" name="project">
+        <option value="">Все проекты</option>
+        {% for project in project_options %}
+          <option value="{{ project.id }}"
+                  {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>
+            {{ project.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <button class="btn btn-primary w-100" type="submit">Найти</button>
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+      <a class="btn btn-outline-secondary w-100"
+         href="{% url 'changes:changes' %}">Сбросить</a>
+    </div>
+  </form>
+
+  <div class="mb-3">
+    <a class="btn btn-sm {% if not selected_type %}btn-primary{% else %}btn-outline-primary{% endif %}"
+       href="{% url 'changes:changes' %}">Все</a>
+    {% for type, label in labels.items %}
+      <a class="btn btn-sm {% if selected_type == type %}btn-primary{% else %}btn-outline-primary{% endif %}"
+         href="?type={{ type }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  {% if statistics %}
+    <div class="mb-3 text-muted">
+      {% for statistic in statistics %}
+        {{ statistic.label }}: {{ statistic.count }}{% if not forloop.last %}; {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
   {% if changes %}
     <ul class="list-group">
       {% for change in changes %}
@@ -15,6 +69,9 @@
           <a href="{% url 'changes:change_detail' change.id %}">
             {{ change.description|truncatechars:100 }}
           </a>
+          {% if change.project_name %}
+            <small class="text-muted">{{ change.project_name }}</small>
+          {% endif %}
           {% if change.type == 'added' %}
             <span class="badge bg-success">Добавлено</span>
           {% elif change.type == 'fixed' %}

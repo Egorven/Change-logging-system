@@ -2,7 +2,7 @@
 
 from django.shortcuts import render
 
-from storage import load_projects, load_versions
+from db.database import get_connection
 
 
 def find_project_by_id(projects, project_id):
@@ -15,7 +15,12 @@ def find_project_by_id(projects, project_id):
 
 def projects(request):
     """Список всех проектов."""
-    project_list = load_projects("data/project.json")
+    with get_connection() as connection:
+        project_list = connection.execute(
+            """SELECT id, name, description
+               FROM projects
+               ORDER BY name"""
+        ).fetchall()
     return render(
         request,
         "projects/project_list.html",
@@ -25,8 +30,20 @@ def projects(request):
 
 def project_detail(request, project_id):
     """Страница одного проекта с версиями."""
-    projects_list = load_projects("data/project.json")
-    project = find_project_by_id(projects_list, project_id)
+    with get_connection() as connection:
+        project = connection.execute(
+            """SELECT id, name, description
+               FROM projects
+               WHERE id = ?""",
+            (project_id,),
+        ).fetchone()
+        project_versions = connection.execute(
+            """SELECT id, name, release_date, project_id
+               FROM versions
+               WHERE project_id = ?
+               ORDER BY release_date DESC""",
+            (project_id,),
+        ).fetchall()
 
     if project is None:
         return render(
@@ -36,11 +53,6 @@ def project_detail(request, project_id):
             status=404,
         )
 
-    versions_list = load_versions("data/version.json", projects_list)
-    project_versions = [
-        version for version in versions_list
-        if version.project and version.project.id == project.id
-    ]
     return render(
         request,
         "projects/project_detail.html",
