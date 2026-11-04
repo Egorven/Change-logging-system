@@ -1,26 +1,13 @@
 """View-функции приложения projects."""
 
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 
-from db.database import get_connection
-
-
-def find_project_by_id(projects, project_id):
-    """Найти проект по идентификатору."""
-    for project in projects:
-        if project.id == project_id:
-            return project
-    return None
+from projects.models import Project
 
 
 def projects(request):
     """Список всех проектов."""
-    with get_connection() as connection:
-        project_list = connection.execute(
-            """SELECT id, name, description
-               FROM projects
-               ORDER BY name"""
-        ).fetchall()
+    project_list = Project.objects.order_by("name")
     return render(
         request,
         "projects/project_list.html",
@@ -30,28 +17,8 @@ def projects(request):
 
 def project_detail(request, project_id):
     """Страница одного проекта с версиями."""
-    with get_connection() as connection:
-        project = connection.execute(
-            """SELECT id, name, description
-               FROM projects
-               WHERE id = ?""",
-            (project_id,),
-        ).fetchone()
-        project_versions = connection.execute(
-            """SELECT id, name, release_date, project_id
-               FROM versions
-               WHERE project_id = ?
-               ORDER BY release_date DESC""",
-            (project_id,),
-        ).fetchall()
-
-    if project is None:
-        return render(
-            request,
-            "projects/project_detail.html",
-            {"project": None, "versions": []},
-            status=404,
-        )
+    project = get_object_or_404(Project, pk=project_id)
+    project_versions = project.versions.order_by("-release_date", "pk")
 
     return render(
         request,
