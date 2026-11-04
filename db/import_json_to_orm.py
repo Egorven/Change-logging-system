@@ -9,6 +9,7 @@ from typing import Any
 
 import django
 from django.db import transaction
+from django.utils.text import slugify
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
@@ -41,6 +42,9 @@ def main() -> None:
                 defaults={
                     "name": item["name"],
                     "description": item.get("description", ""),
+                    "slug": (
+                        f"{slugify(item['name']) or 'project'}-{item['id']}"
+                    ),
                 },
             )
         for item in developers:

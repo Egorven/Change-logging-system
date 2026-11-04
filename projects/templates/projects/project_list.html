@@ -9,7 +9,7 @@
     <ul class="list-group">
       {% for project in projects %}
         <li class="list-group-item">
-          <a href="{% url 'projects:project_detail' project.id %}">
+          <a href="{{ project.get_absolute_url }}">
             {{ project.name|truncatechars:60 }}
           </a>
         </li>

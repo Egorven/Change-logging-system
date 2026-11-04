@@ -163,8 +163,8 @@ version.project.name     # название проекта версии
 ## Страницы веб-интерфейса
 
 * `/` – главная страница: описание приложения и навигация (view-функция `index()`);
-* `/projects/` – список проектов: объекты `Project` из `data/project.json` (view-функция `projects()`);
-* `/projects/<int:project_id>/` – страница проекта с версиями (view-функция `project_detail()`);
+* `/projects/` – список проектов из рабочей базы Django (view-функция `projects()`);
+* `/projects/<slug>/` – страница проекта с версиями (view-функция `project_detail()`);
 * `/changes/` – список изменений: объекты `Change` из `data/changes.json` (view-функция `changes()`);
 * `/changes/<int:change_id>/` – страница изменения (view-функция `change_detail()`).
 
@@ -198,7 +198,7 @@ version.project.name     # название проекта версии
 
 ```django
 {% url 'homepage:index' %}
-{% url 'projects:project_detail' project.id %}
+{{ project.get_absolute_url }}
 {% url 'changes:change_detail' change.id %}
 ```
 
@@ -488,6 +488,23 @@ ORM-запросы находятся в [projects/views.py](projects/views.py) 
 связанным полям, `select_related()`, `annotate()`, `Count()`, `Q()`, `values()`,
 безопасный `order_by()` и `Paginator`. Прямой SQL-слой ПР7 не используется
 веб-представлениями и оставлен для сравнения подходов и проверки исходных данных.
+В ПР10 административная панель настроена для моделей проекта, а SQL-запросы ORM
+можно анализировать через Django Debug Toolbar.
+
+## Реализация ПР10: Django Admin и расширенный ORM
+
+В административной панели зарегистрированы модели `Project`, `Version`,
+`Developer` и `Change`. Для них настроены столбцы списков, поиск, фильтры,
+сортировка, пагинация и отображение связанных объектов через inline-формы.
+
+Подробные страницы проектов используют slug-адреса вида
+`/projects/changelog-tracker-1/`. Модель `Project` предоставляет метод
+`get_absolute_url()`, а поле `name_length` реализовано через `GeneratedField` и
+вычисляется базой данных. Общие данные `site_name` и `projects_count` передаются
+в шаблоны через контекстный процессор `projects.context_processors.project_context`.
+
+Для локального анализа SQL подключён Django Debug Toolbar. Панель доступна
+только при `DEBUG=True` по адресу `/__debug__/` и не предназначена для production.
 
 ## Назначение модулей
 

@@ -15,7 +15,7 @@
           <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'homepage:index' %}">Главная</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if '/projects/' in request.path %}active{% endif %}" href="{% url 'projects:projects' %}">Проекты</a>
+          <a class="nav-link {% if '/projects/' in request.path %}active{% endif %}" href="{% url 'projects:projects' %}">Проекты ({{ projects_count|default:0 }})</a>
         </li>
         <li class="nav-item">
           <a class="nav-link {% if '/changes/' in request.path %}active{% endif %}" href="{% url 'changes:changes' %}">Изменения</a>

@@ -1,6 +1,9 @@
 """ORM-модели проектов и версий проекта."""
 
 from django.db import models
+from django.db.models.functions import Length
+from django.urls import reverse
+from django.utils.text import slugify
 
 
 class Project(models.Model):
@@ -12,6 +15,19 @@ class Project(models.Model):
         default="",
         verbose_name="Описание",
     )
+    slug = models.SlugField(
+        max_length=220,
+        blank=True,
+        editable=False,
+        unique=True,
+        verbose_name="URL-идентификатор",
+    )
+    name_length = models.GeneratedField(
+        expression=Length("name"),
+        output_field=models.PositiveIntegerField(),
+        db_persist=True,
+        verbose_name="Длина названия",
+    )
 
     class Meta:
         ordering = ["name"]
@@ -20,6 +36,23 @@ class Project(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name) or "project"
+            self.slug = f"{base_slug}-{self.pk}" if self.pk else base_slug
+            if not self.pk:
+                super().save(*args, **kwargs)
+                self.slug = f"{base_slug}-{self.pk}"
+                super().save(update_fields=["slug"])
+                return
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self) -> str:
+        return reverse(
+            "projects:project_detail",
+            kwargs={"slug": self.slug},
+        )
 
 
 class Version(models.Model):

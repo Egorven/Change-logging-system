@@ -15,9 +15,9 @@ def projects(request):
     )
 
 
-def project_detail(request, project_id):
+def project_detail(request, slug):
     """Страница одного проекта с версиями."""
-    project = get_object_or_404(Project, pk=project_id)
+    project = get_object_or_404(Project, slug=slug)
     project_versions = project.versions.order_by("-release_date", "pk")
 
     return render(
