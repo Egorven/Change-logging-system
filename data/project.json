@@ -3,5 +3,20 @@
     "id": 1,
     "name": "ChangeLog Tracker",
     "description": "Система ведения журнала изменений"
+  },
+  {
+    "id": 2,
+    "name": "TaskFlow",
+    "description": "Сервис управления задачами и командной работой"
+  },
+  {
+    "id": 3,
+    "name": "Shop API",
+    "description": "REST API интернет-магазина"
+  },
+  {
+    "id": 4,
+    "name": "Study Portal",
+    "description": "Образовательный портал с курсами и тестами"
   }
 ]

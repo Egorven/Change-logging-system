@@ -75,6 +75,7 @@ def main() -> None:
                     "project_id": item.get("project_id"),
                     "version_id": item.get("version_id"),
                     "developer_id": item.get("developer_id"),
+                    "status": item.get("status", Change.ACTIVE),
                 },
             )
 

@@ -7,7 +7,8 @@
     "date": "2026-09-10",
     "project_id": 1,
     "version_id": 1,
-    "developer_id": null
+    "developer_id": 1,
+    "status": "active"
   },
   {
     "id": 2,
@@ -17,7 +18,8 @@
     "date": "2026-09-09",
     "project_id": 1,
     "version_id": 1,
-    "developer_id": null
+    "developer_id": 2,
+    "status": "active"
   },
   {
     "id": 3,
@@ -27,6 +29,194 @@
     "date": "2026-09-08",
     "project_id": 1,
     "version_id": 1,
-    "developer_id": null
+    "developer_id": 1,
+    "status": "active"
+  },
+  {
+    "id": 4,
+    "type": "added",
+    "description": "Добавлена фильтрация записей по проекту и диапазону дат",
+    "author": "Мария Ивановна",
+    "date": "2026-10-15",
+    "project_id": 1,
+    "version_id": 2,
+    "developer_id": 2,
+    "status": "active"
+  },
+  {
+    "id": 5,
+    "type": "added",
+    "description": "Реализованы пользовательские формы создания и редактирования",
+    "author": "Алексей Смирнов",
+    "date": "2026-11-12",
+    "project_id": 1,
+    "version_id": 3,
+    "developer_id": 3,
+    "status": "active"
+  },
+  {
+    "id": 6,
+    "type": "fixed",
+    "description": "Исправлено сохранение параметров при пагинации",
+    "author": "Елена Волкова",
+    "date": "2026-11-13",
+    "project_id": 1,
+    "version_id": 3,
+    "developer_id": 4,
+    "status": "active"
+  },
+  {
+    "id": 7,
+    "type": "removed",
+    "description": "Удалён устаревший обработчик прямых SQL-запросов",
+    "author": "Иван Петров",
+    "date": "2026-11-14",
+    "project_id": 1,
+    "version_id": 3,
+    "developer_id": 1,
+    "status": "cancelled"
+  },
+  {
+    "id": 8,
+    "type": "added",
+    "description": "Добавлена доска задач с колонками статусов",
+    "author": "Мария Ивановна",
+    "date": "2026-08-20",
+    "project_id": 2,
+    "version_id": 4,
+    "developer_id": 2,
+    "status": "active"
+  },
+  {
+    "id": 9,
+    "type": "fixed",
+    "description": "Исправлено перемещение карточек между колонками",
+    "author": "Алексей Смирнов",
+    "date": "2026-08-22",
+    "project_id": 2,
+    "version_id": 4,
+    "developer_id": 3,
+    "status": "active"
+  },
+  {
+    "id": 10,
+    "type": "added",
+    "description": "Реализованы уведомления о приближении срока задачи",
+    "author": "Дмитрий Орлов",
+    "date": "2026-10-03",
+    "project_id": 2,
+    "version_id": 5,
+    "developer_id": 5,
+    "status": "active"
+  },
+  {
+    "id": 11,
+    "type": "removed",
+    "description": "Удалён экспериментальный режим общего доступа к доске",
+    "author": "Ольга Соколова",
+    "date": "2026-10-05",
+    "project_id": 2,
+    "version_id": 5,
+    "developer_id": 6,
+    "status": "cancelled"
+  },
+  {
+    "id": 12,
+    "type": "added",
+    "description": "Добавлен поиск товаров по названию и категории",
+    "author": "Алексей Смирнов",
+    "date": "2026-09-25",
+    "project_id": 3,
+    "version_id": 6,
+    "developer_id": 3,
+    "status": "active"
+  },
+  {
+    "id": 13,
+    "type": "fixed",
+    "description": "Исправлен расчёт итоговой стоимости корзины",
+    "author": "Иван Петров",
+    "date": "2026-09-27",
+    "project_id": 3,
+    "version_id": 6,
+    "developer_id": 1,
+    "status": "active"
+  },
+  {
+    "id": 14,
+    "type": "added",
+    "description": "Добавлена история статусов заказа",
+    "author": "Ольга Соколова",
+    "date": "2026-11-01",
+    "project_id": 3,
+    "version_id": 7,
+    "developer_id": 6,
+    "status": "active"
+  },
+  {
+    "id": 15,
+    "type": "fixed",
+    "description": "Устранена ошибка повторной оплаты заказа",
+    "author": "Елена Волкова",
+    "date": "2026-11-04",
+    "project_id": 3,
+    "version_id": 7,
+    "developer_id": 4,
+    "status": "active"
+  },
+  {
+    "id": 16,
+    "type": "added",
+    "description": "Добавлен каталог учебных курсов",
+    "author": "Мария Ивановна",
+    "date": "2026-10-28",
+    "project_id": 4,
+    "version_id": 8,
+    "developer_id": 2,
+    "status": "active"
+  },
+  {
+    "id": 17,
+    "type": "added",
+    "description": "Реализовано прохождение тестов с подсчётом результата",
+    "author": "Алексей Смирнов",
+    "date": "2026-10-30",
+    "project_id": 4,
+    "version_id": 8,
+    "developer_id": 3,
+    "status": "active"
+  },
+  {
+    "id": 18,
+    "type": "fixed",
+    "description": "Исправлено отображение прогресса обучения",
+    "author": "Елена Волкова",
+    "date": "2026-11-02",
+    "project_id": 4,
+    "version_id": 8,
+    "developer_id": 4,
+    "status": "active"
+  },
+  {
+    "id": 19,
+    "type": "removed",
+    "description": "Удалён устаревший формат выгрузки результатов",
+    "author": "Дмитрий Орлов",
+    "date": "2026-11-05",
+    "project_id": 4,
+    "version_id": 8,
+    "developer_id": 5,
+    "status": "active"
+  },
+  {
+    "id": 20,
+    "type": "fixed",
+    "description": "Исправлена проверка доступа преподавателя к курсу",
+    "author": "Иван Петров",
+    "date": "2026-11-07",
+    "project_id": 4,
+    "version_id": 8,
+    "developer_id": 1,
+    "status": "active"
   }
 ]
