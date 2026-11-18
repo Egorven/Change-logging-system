@@ -23,6 +23,13 @@ dist/
 .idea/
 .vscode/
 
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+local_settings.py
+*.log
+
 # Operating system files
 .DS_Store
 Thumbs.db
@@ -30,3 +37,5 @@ Thumbs.db
 # Django
 db.sqlite3
 db.sqlite3-journal
+media/
+.datachangelog.sqlite

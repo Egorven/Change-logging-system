@@ -26,8 +26,22 @@
         <p><strong>Автор:</strong> {{ author }}</p>
         <p><strong>Проект:</strong> {{ project_name }}</p>
         <p><strong>Версия:</strong> {{ version_name }}</p>
+        <p><strong>Статус:</strong> {{ change.get_status_display }}</p>
+        {% if change.attachment %}
+          <p><strong>Вложение:</strong> <a href="{{ change.attachment.url }}">Скачать файл</a></p>
+          {% if change.attachment_is_image %}
+            <img src="{{ change.attachment.url }}" class="img-fluid rounded mb-3" alt="Вложение к изменению">
+          {% endif %}
+        {% endif %}
 
         <a href="{% url 'changes:changes' %}" class="btn btn-outline-secondary">← к списку изменений</a>
+        <a href="{% url 'changes:change_edit' change.id %}" class="btn btn-primary">Редактировать</a>
+        {% if change.status != 'cancelled' %}
+          <form method="post" action="{% url 'changes:change_cancel' change.id %}" class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger" type="submit">Отменить запись</button>
+          </form>
+        {% endif %}
       </div>
     </div>
   {% else %}

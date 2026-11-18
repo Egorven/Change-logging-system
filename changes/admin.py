@@ -20,6 +20,7 @@ class ChangeAdmin(admin.ModelAdmin):
         "type",
         "author",
         "date",
+        "status",
         "project",
         "version",
         "developer",
@@ -31,7 +32,7 @@ class ChangeAdmin(admin.ModelAdmin):
         "project__name",
         "developer__name",
     )
-    list_filter = ("type", "date", "project", "developer")
+    list_filter = ("type", "status", "date", "project", "developer")
     ordering = ("-date", "-pk")
     list_per_page = 20
     list_select_related = ("project", "version", "developer")

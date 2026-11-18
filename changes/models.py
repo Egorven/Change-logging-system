@@ -1,5 +1,7 @@
 """ORM-модели разработчиков и записей журнала изменений."""
 
+from pathlib import Path
+
 from django.db import models
 
 from projects.models import Project, Version
@@ -25,6 +27,13 @@ class Developer(models.Model):
         return self.name
 
 
+class ChangeQuerySet(models.QuerySet):
+    """Повторно используемые выборки записей журнала."""
+
+    def active(self):
+        return self.filter(status=Change.ACTIVE)
+
+
 class Change(models.Model):
     """Запись журнала изменений."""
 
@@ -35,6 +44,12 @@ class Change(models.Model):
         (ADDED, "Добавлено"),
         (FIXED, "Исправлено"),
         (REMOVED, "Удалено"),
+    )
+    ACTIVE = "active"
+    CANCELLED = "cancelled"
+    STATUS_CHOICES = (
+        (ACTIVE, "Активно"),
+        (CANCELLED, "Отменено"),
     )
 
     type = models.CharField(
@@ -72,6 +87,19 @@ class Change(models.Model):
         blank=True,
         verbose_name="Разработчик",
     )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=ACTIVE,
+        editable=False,
+        verbose_name="Статус",
+    )
+    attachment = models.FileField(
+        upload_to="changes/%Y/%m/",
+        blank=True,
+        verbose_name="Вложение",
+    )
+    objects = ChangeQuerySet.as_manager()
 
     class Meta:
         ordering = ["-date", "-pk"]
@@ -95,3 +123,11 @@ class Change(models.Model):
 
     def is_removed(self) -> bool:
         return self.type == self.REMOVED
+
+    @property
+    def attachment_is_image(self) -> bool:
+        if not self.attachment:
+            return False
+        return Path(self.attachment.name).suffix.lower() in {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp",
+        }

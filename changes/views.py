@@ -1,13 +1,12 @@
 """View-функции приложения changes."""
 
-from datetime import datetime
-
 from django.core.paginator import Paginator
 from django.db.models import Count, F, Q
-from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseNotAllowed
+from django.shortcuts import get_object_or_404, redirect, render
 
+from changes.forms import ChangeFilterForm, ChangeForm
 from changes.models import Change
-from projects.models import Project
 
 BADGES = {
     "added": "bg-success",
@@ -22,48 +21,49 @@ LABELS = {
 
 
 def changes(request):
-    """Список изменений с фильтрацией по параметрам пользователя."""
-    change_type = request.GET.get("type", "").strip()
-    search_text = request.GET.get("q", "").strip()
-    project_id = request.GET.get("project", "").strip()
-    date_from = request.GET.get("date_from", "").strip()
-    date_to = request.GET.get("date_to", "").strip()
-    sort = request.GET.get("sort", "date")
-    error = None
-    changes_query = Change.objects.select_related(
+    """Список изменений с проверенной Django-формой фильтрации."""
+    filter_form = ChangeFilterForm(request.GET or None)
+    changes_query = Change.objects.active().select_related(
         "project", "version", "developer"
     ).annotate(project_name=F("project__name"))
-    if change_type in LABELS:
-        changes_query = changes_query.filter(type=change_type)
-    if search_text:
-        changes_query = changes_query.filter(
-            Q(description__icontains=search_text)
-            | Q(author__icontains=search_text)
-            | Q(developer__name__icontains=search_text)
-        )
-    if project_id.isdigit():
-        changes_query = changes_query.filter(project_id=int(project_id))
-    if date_from:
-        try:
+    if filter_form.is_valid():
+        data = filter_form.cleaned_data
+        if data.get("status") == "all":
+            changes_query = Change.objects.select_related(
+                "project", "version", "developer"
+            ).annotate(project_name=F("project__name"))
+        elif data.get("status") == "cancelled":
+            changes_query = Change.objects.filter(
+                status=Change.CANCELLED
+            ).select_related(
+                "project", "version", "developer"
+            ).annotate(project_name=F("project__name"))
+        if data.get("type"):
+            changes_query = changes_query.filter(type=data["type"])
+        if data.get("q"):
             changes_query = changes_query.filter(
-                date__gte=datetime.strptime(date_from, "%Y-%m-%d").date()
+                Q(description__icontains=data["q"])
+                | Q(author__icontains=data["q"])
+                | Q(developer__name__icontains=data["q"])
             )
-        except ValueError:
-            error = "Укажите корректную начальную дату."
-    if date_to:
-        try:
-            changes_query = changes_query.filter(
-                date__lte=datetime.strptime(date_to, "%Y-%m-%d").date()
-            )
-        except ValueError:
-            error = "Укажите корректную конечную дату."
+        if data.get("project"):
+            changes_query = changes_query.filter(project=data["project"])
+        if data.get("developer"):
+            changes_query = changes_query.filter(developer=data["developer"])
+        if data.get("date_from"):
+            changes_query = changes_query.filter(date__gte=data["date_from"])
+        if data.get("date_to"):
+            changes_query = changes_query.filter(date__lte=data["date_to"])
+        sort = data.get("sort") or "date"
+    else:
+        sort = "date"
     sort_fields = {
         "date": "-date",
         "project": "project__name",
         "type": "type",
     }
     changes_query = changes_query.order_by(
-        sort_fields.get(sort, "-date"), "-pk"
+        sort_fields[sort], "-pk"
     )
     page_obj = Paginator(changes_query, 5).get_page(
         request.GET.get("page")
@@ -78,9 +78,7 @@ def changes(request):
         .order_by("type")
     ]
     total_changes = Change.objects.aggregate(total=Count("id"))["total"]
-    active_changes = Change.objects.exclude(
-        type=Change.REMOVED,
-    ).count()
+    active_changes = Change.objects.active().count()
     context = {
         "changes": page_obj,
         "page_obj": page_obj,
@@ -89,14 +87,17 @@ def changes(request):
         "statistics": statistics,
         "total_changes": total_changes,
         "active_changes": active_changes,
-        "selected_type": change_type,
-        "search_text": search_text,
-        "selected_project": project_id,
-        "project_options": Project.objects.order_by("name"),
-        "date_from": date_from,
-        "date_to": date_to,
-        "sort": sort if sort in sort_fields else "date",
-        "error": error,
+        "filter_form": filter_form,
+        "selected_type": request.GET.get("type", ""),
+        "search_text": request.GET.get("q", ""),
+        "selected_project": request.GET.get("project", ""),
+        "project_options": filter_form.fields["project"].queryset,
+        "developer_options": filter_form.fields["developer"].queryset,
+        "selected_developer": request.GET.get("developer", ""),
+        "selected_status": request.GET.get("status", "active"),
+        "date_from": request.GET.get("date_from", ""),
+        "date_to": request.GET.get("date_to", ""),
+        "sort": sort,
     }
     return render(request, "changes/change_list.html", context)
 
@@ -117,3 +118,39 @@ def change_detail(request, change_id):
         "label": LABELS.get(change.type, "Изменено"),
     }
     return render(request, "changes/change_detail.html", context)
+
+
+def change_create(request):
+    """Создаёт запись изменения по GET/POST с серверной валидацией."""
+    form = ChangeForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        change = form.save()
+        return redirect("changes:change_detail", change_id=change.pk)
+    return render(request, "changes/change_form.html", {
+        "form": form, "page_title": "Новое изменение",
+    })
+
+
+def change_edit(request, change_id):
+    """Редактирует существующую запись, не открывая служебные поля."""
+    change = get_object_or_404(Change, pk=change_id)
+    form = ChangeForm(
+        request.POST or None, request.FILES or None, instance=change
+    )
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("changes:change_detail", change_id=change.pk)
+    return render(request, "changes/change_form.html", {
+        "form": form, "change": change, "page_title": "Редактирование",
+    })
+
+
+def change_cancel(request, change_id):
+    """Отменяет запись только изменяющим POST-запросом."""
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+    change = get_object_or_404(Change, pk=change_id)
+    if change.status != Change.CANCELLED:
+        change.status = Change.CANCELLED
+        change.save(update_fields=["status"])
+    return redirect("changes:change_detail", change_id=change.pk)
